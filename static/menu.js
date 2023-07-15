@@ -160,9 +160,9 @@ if(name){
     //console.log(item)
   if(name){
     dishes.push(+(item.id));
-    alert("Dish has been added to your order list")
+    swal.fire("Dish has been added to your order list")
   }else{
-    alert("Please login first")
+    swal.fire("Please login first")
   }
    
 
@@ -196,8 +196,10 @@ if(name){
             body:JSON.stringify(obj)
         })
         if(req.ok){
+           dishes=[];
             let data = await req.json();
             swal.fire(data.message);
+
         }
     } catch (error) {
         console.log(error)
