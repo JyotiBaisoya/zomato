@@ -1,0 +1,133 @@
+/* Reset default margin and padding */
+* {
+    margin: 0;
+    padding: 0;
+  }
+  
+  nav {
+    background-color: #f8f8f8;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 20px;
+  }
+  
+  .logo a {
+    color: #333;
+    text-decoration: none;
+    font-size: 20px;
+    font-weight: bold;
+  }
+  
+  .nav-links {
+    list-style: none;
+    display: flex;
+  }
+  
+  .nav-links li {
+    margin-right: 10px;
+  }
+  
+  .nav-links a {
+    color: #333;
+    text-decoration: none;
+    padding: 5px;
+  }
+  
+  .auth-buttons button {
+    background-color: #333;
+    color: #fff;
+    border: none;
+    padding: 8px 16px;
+    margin-left: 10px;
+    border-radius: 4px;
+    cursor: pointer;
+  }
+  
+  .auth-buttons button:hover {
+    background-color: #555;
+  }
+
+  
+.menu {
+    padding: 40px;
+  }
+  
+  .menu-container {
+    max-width: 800px;
+    margin: 0 auto;
+  }
+  
+  .menu-container h2 {
+    text-align: center;
+    margin-bottom: 20px;
+  }
+  
+  .dish-list {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 20px;
+  }
+  
+  .dish-card {
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    padding: 10px;
+  }
+  
+  .dish-card img {
+    width: 100%;
+    height: 200px;
+    object-fit: cover;
+    border-radius: 4px;
+  }
+  
+  .dish-card h3 {
+    margin: 10px 0;
+  }
+  
+  .dish-card p {
+    margin-bottom: 10px;
+  }
+  
+  .cta-btn {
+    display: block;
+    margin: 20px auto;
+    background-color: #ff4500;
+    color: #fff;
+    border: none;
+    padding: 10px 20px;
+    font-size: 16px;
+    border-radius: 4px;
+    cursor: pointer;
+  }
+  
+  .cta-btn:hover {
+    background-color: #e63e00;
+  }
+  
+  footer {
+    background-color: #333;
+    color: #fff;
+    padding: 20px;
+    text-align: center;
+  }
+  
+  footer p {
+    margin: 0;
+  }
+  
+  .dta-btn {
+    display: block;
+    margin: 5px auto;
+    background-color: #ff4500;
+    color: #fff;
+    border: none;
+    padding: 5px 5px;
+    font-size: 10px;
+    border-radius: 2px;
+    cursor: pointer;
+  }
+  .dta-btn:hover {
+    background-color: #e63e00;
+  }

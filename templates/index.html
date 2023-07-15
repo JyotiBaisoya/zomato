@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Zesty Zomato</title>
+    <link rel="stylesheet" type="text/css" href="../static/style.css">
+</head>
+<body>
+
+    <nav class="navbar">
+        <div class="navbar-item">
+            <a class="navbar-link" href="../home.html">Home</a>
+        </div>
+        <div class="navbar-item">
+            <a class="navbar-link" href="#">Menu</a>
+        </div>
+        <div class="navbar-item">
+            <a class="navbar-link" href="#">Orders</a>
+        </div>
+    </nav>
+
+    <div id="container">
+        <h1>Zesty Zomato Menu Management</h1>
+        <div id="menu-container">
+            <h2>Menu</h2>
+            <div id="menu-items"></div>
+            <form id="add-dish-form">
+                <label for="dish-name">Dish Name:</label>
+                <input type="text" id="dish-name" required>
+    
+                <label for="dish-image">Dish Image:</label>
+                <input type="text" id="dish-image" required>
+    
+                <label for="dish-price">Dish Price:</label>
+                <input type="number" id="dish-price" step="0.01" required>
+    
+                <button type="submit">Add Dish</button>
+            </form>
+        </div>
+    
+        <div id="order-container">
+            <h2>Place Order</h2>
+            <form id="order-form">
+                <label for="customer-name">Customer Name:</label>
+                <input type="text" id="customer-name" required>
+    
+                <label for="dish-id">Dish ID:</label>
+                <input type="number" id="dish-id" required>
+    
+                <button type="submit">Place Order</button>
+            </form>
+        </div>
+    
+        <div id="order-status-container">
+            <h2>Update Order Status</h2>
+            <form id="order-status-form">
+                <label for="order-id">Order ID:</label>
+                <input type="number" id="order-id" required>
+    
+                <label for="status">Status:</label>
+                <select id="status" required>
+                    <option value="preparing">Preparing</option>
+                    <option value="ready">Ready for Pickup</option>
+                    <option value="delivered">Delivered</option>
+                </select>
+    
+                <button type="submit">Update Status</button>
+            </form>
+        </div>
+    
+        <div id="orders-container">
+            <h2>All Orders</h2>
+            <table id="orders-table">
+                <tr>
+                    <th>Order ID</th>
+                    <th>Customer Name</th>
+                    <th>Status</th>
+                </tr>
+            </table>
+        </div>
+    
+    </div>
+    
+    <script src="../static/script.js"></script>
+</body>
+</html>

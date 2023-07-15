@@ -1,124 +1,145 @@
 
-import json
-from flask import Flask, jsonify, request
-
-
+from flask import Flask, jsonify, request, render_template, session
+from flask_cors import CORS
+from flask_pymongo import PyMongo
+from bson import ObjectId
 app = Flask(__name__)
+app.secret_key = 'sanvi'
+cors = CORS(app)
+
+app.config['MONGO_URI'] = "mongodb+srv://jyotibaisoya:baisoya@cluster0.0gxpf.mongodb.net/quickbitedb?retryWrites=true&w=majority"  # Replace with your MongoDB URI
+mongo = PyMongo(app)
+
+@app.route('/signup', methods=['POST'])
+def signup():
+    data = request.json
+    email=data.get("email")
+    username = data.get('username')
+    password = data.get('password')
+    role = data.get('role', 'user')
+    if not username or not password:
+        return jsonify({'message': 'Invalid credentials'}), 400
+
+    users_collection = mongo.db.users
+    if users_collection.find_one({'username': username}):
+        return jsonify({'message': 'Username already exists'}), 400
+
+    new_user = {
+
+        'username': username,
+        "email":email,
+        'password': password,
+        'role': role
+    }
+    users_collection.insert_one(new_user)
+
+    return jsonify({'message': 'User created successfully'})
 
 
+@app.route('/login', methods=['POST'])
+def login():
+    data = request.json
+    username = data.get('username')
+    password = data.get('password')
+    if not username or not password:
+        return jsonify({'message': 'Invalid credentials'}), 400
 
+    users_collection = mongo.db.users
+    user = users_collection.find_one({'username': username})
+    if user and user['password'] == password:
+        session['username'] = username
+        session['role'] = user['role']
+        return jsonify({'message': 'Login successful', 'user': data})
+    else:
+        return jsonify({'message': 'Invalid credentials'}), 401
 
-order_file = 'orders.json'
-menu_file = 'menu.json'
 
 @app.route('/menu', methods=['GET'])
 def get_menu():
-    with open(menu_file, 'r') as file:
-        menu_data = json.load(file)
+    menu_collection = mongo.db.menu
+    pipeline = [
+        {
+            '$project': {
+                '_id': {'$toString': '$_id'},
+                'id': {'$toString': '$id'},
+                'dish': True,
+                'price': True,
+                'image': True,
+                "availability":True
+            }
+        }
+    ]
+    menu_data = list(menu_collection.aggregate(pipeline))
+
     return jsonify({'menu': menu_data})
+
 
 @app.route('/menu', methods=['POST'])
 def add_dish():
     dish = request.json
-    with open(menu_file, 'r+') as file:
-        menu_data = json.load(file)
-        dish_id = max(dish['id'] for dish in menu_data) + 1
-        dish['id'] = dish_id
-        menu_data.append(dish)
-        file.seek(0)
-        json.dump(menu_data, file, indent=4)
-        file.truncate()
+    menu_collection = mongo.db.menu
+    dish_id = menu_collection.count_documents({}) + 1
+    dish['id'] = dish_id
+    menu_collection.insert_one(dish)
     return jsonify({'message': 'Dish added successfully'})
 
 @app.route('/menu/<int:dish_id>', methods=['PUT'])
 def update_dish(dish_id):
     dish_updates = request.json
-    with open(menu_file, 'r+') as file:
-        menu_data = json.load(file)
-        for dish in menu_data:
-            if dish['id'] == dish_id:
-                dish.update(dish_updates)
-                file.seek(0)
-                json.dump(menu_data, file, indent=4)
-                file.truncate()
-                return jsonify({'message': f'Dish with ID {dish_id} updated successfully'})
-    return jsonify({'message': f'Dish with ID {dish_id} not found'})
-
+    menu_collection = mongo.db.menu
+    menu_collection.update_one({'id': dish_id}, {'$set': dish_updates})
+    return jsonify({'message': f'Dish with ID {dish_id} updated successfully'})
 
 @app.route('/menu/<int:dish_id>', methods=['DELETE'])
 def delete_dish(dish_id):
-    with open(menu_file, 'r+') as file:
-        menu_data = json.load(file)
-        for dish in menu_data:
-            if dish['id'] == dish_id:
-                menu_data.remove(dish)
-                file.seek(0)
-                json.dump(menu_data, file, indent=4)
-                file.truncate()
-                return jsonify({'message': f'Dish with ID {dish_id} deleted successfully'})
-    return jsonify({'message': f'Dish with ID {dish_id} not found'})
-
+    menu_collection = mongo.db.menu
+    menu_collection.delete_one({'id': dish_id})
+    return jsonify({'message': f'Dish with ID {dish_id} deleted successfully'})
 
 
 
 @app.route('/order', methods=['POST'])
 def place_order():
     order_data = request.json
-    menu_data = get_menu_data()
-    order_id = generate_order_id()
+    menu_collection = mongo.db.menu
+    order_collection = mongo.db.orders  # Update the collection name to 'orders'
+    order_id = order_collection.count_documents({}) + 1
+
     for dish_id in order_data['dishes']:
-        dish = find_dish_by_id(dish_id, menu_data)
+        dish = menu_collection.find_one({'id': dish_id})
         if dish is None:
-            return jsonify({'message': f'Dish with ID {dish_id} not found in the menu'})
-        if not dish['available']:
+          return jsonify({'message': f'Dish with ID {dish_id} not found in the menu'})
+        if dish["availabilty"] is False: 
             return jsonify({'message': f'Dish with ID {dish_id} is not available'})
+
     order = {
         'id': order_id,
         'customer_name': order_data['customer_name'],
         'dishes': order_data['dishes'],
         'status': 'received'
     }
-    save_order(order)
+    order_collection.insert_one(order)
+
     return jsonify({'message': f'Order placed successfully. Order ID: {order_id}'})
-
-def get_menu_data():
-    with open(menu_file, 'r') as file:
-        menu_data = json.load(file)
-    return menu_data
-
-def generate_order_id():
-    # Read the existing order IDs from the orders.json file
-    existing_order_ids = []
-    with open('orders.json', 'r') as file:
-        for line in file:
-            order = json.loads(line.strip())
-            existing_order_ids.append(order['id'])
-    
-    
-    max_order_id = max(existing_order_ids) if existing_order_ids else 0
-    
-    
-    order_id = max_order_id + 1
-    
-    return order_id
-    
-
-def find_dish_by_id(dish_id, menu_data):
-    for dish in menu_data:
-        if dish['id'] == dish_id:
-            return dish
-    return None
-
-def save_order(order):
-    with open(order_file, 'a') as file:
-        file.write(json.dumps(order) + '\n')
 
 
 
 @app.route('/order', methods=['GET'])
 def get_order():
-    with open(order_file, 'r') as file:
-        order_data = json.load(file)
+    order_collection = mongo.db.orders
+    pipeline = [
+        {
+            '$project': {
+                '_id': False,
+                'id': {'$toString': '$_id'},
+                'customer_name': True,
+                'dishes': True,
+                'status': True
+            }
+        }
+    ]
+    order_data = list(order_collection.aggregate(pipeline))
+
     return jsonify({'order': order_data})
 
 
@@ -130,29 +151,15 @@ def update_order(order_id):
     if updated_status is None:
         return jsonify({'message': 'Status not provided'})
 
-    updated_order = None
+    order_collection = mongo.db.orders
+    result = order_collection.update_one({'id': order_id}, {'$set': {'status': updated_status}})
 
-    with open(order_file, 'r+') as file:
-        orders = [json.loads(line.strip()) for line in file]
-
-        for order in orders:
-            if order['id'] == order_id:
-                order['status'] = updated_status
-                updated_order = order
-                break
-
-        file.seek(0)
-        file.truncate()
-
-        for order in orders:
-            file.write(json.dumps(order) + '\n')
-
-    if updated_order:
+    if result.modified_count:
         return jsonify({'message': 'Order updated successfully'})
     else:
         return jsonify({'message': f'Order with ID {order_id} not found'})
 
 
 
-if __name__=='__main__':
+if __name__ == '__main__':
     app.run()
